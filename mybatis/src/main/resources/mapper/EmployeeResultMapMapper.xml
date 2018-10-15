@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xu.mybatis.mapper.EmployeeResultMapMapper">
+    <!--自定义javabean的封装规则-->
+    <resultMap id="MySimpleEmp" type="employee">
+        <!--id标签定义主键-->
+        <id property="id" column="id"></id>
+        <result property="lastName" column="lastName"></result>
+        <result property="dId" column="d_id"></result>
+        <!--其他不指定的列会自动封装-->
+
+    </resultMap>
+    <!--reultMap自定义结果映射规则-->
+    <select id="getEmployeeById" resultMap="MySimpleEmp">
+      SELECT * from employee where id=#{id}
+    </select>
+
+    <!--查询员工信息，并把它所关联的部门的信息查出来-->
+    <!--resultMap封装级联属性-->
+    <resultMap id="MyDiffEmp" type="employee">
+        <id column="id" property="id"></id>
+        <result column="lastName" property="lastName"></result>
+        <result column="gender" property="gender"></result>
+        <result column="email" property="email"></result>
+        <result column="d_id" property="department.id"></result>
+        <result column="dept" property="department.departmentName"></result>
+    </resultMap>
+    <!--使用association关联单个对象的封装规则-->
+    <resultMap id="MyDiffEmp2" type="employee">
+        <id column="id" property="id"></id>
+        <result column="lastName" property="lastName"></result>
+        <result column="gender" property="gender"></result>
+        <result column="email" property="email"></result>
+        <!--association指定联合的Javabean对象，
+        property="department" 指定哪个属性是联合的对象，
+        javaType="com.xu.mybatis.bean.Department":指定这个属性对象的类型，不能省略-->
+        <association property="department" javaType="com.xu.mybatis.bean.Department">
+            <id column="d_id" property="id"></id>
+            <result column="dept" property="departmentName"></result>
+        </association>
+    </resultMap>
+    <select id="getEmpAndDept" resultMap="MyDiffEmp2">
+        select a.id id,a.lastName lastName,a.gender gender,a.email email,b.id d_id,b.dept dept from employee a,department b where a.d_id=b.id and a.d_id=#{dId}
+    </select>
+
+    <!--使用association进行分步查询
+    1.按照员工id查询员工信息
+    2.根据员工的部门，查询部门信息
+    3.部门设置到员工中
+    -->
+    <resultMap  id="MyEmpByStep" type="employee">
+        <id column="id" property="id"></id>
+        <result column="lastName" property="lastName"></result>
+        <result column="email" property="email"></result>
+        <result column="gender" property="gender"></result>
+        <!--association定义关联对象的封装规则
+        select:表明当前属性是调用select指定的方法查出的结果
+        column：指定将哪一列的值传给这个方法
+        流程：
+        使用select指定的方法（传入column指定的这列参数的值）查出对象，并封装给property
+        -->
+        <association property="department"
+                     select="com.xu.mybatis.mapper.DepartmentMapper.getDeptById"
+                     column="d_id"
+        ></association>
+    </resultMap>
+    <!--<select id="getEmpByIdStep" resultMap="MyEmpByStep">-->
+    <select id="getEmpByIdStep" resultMap="MyEmpDis">
+        select * from employee where id=#{id}
+    </select>
+    <!--可以使用延迟加载
+    我们每次查询员工，可以部门信息用的时候再查出来
+    -->
+
+    <!--扩展：
+        <discriminator javaType="">
+            <case value=""></case>
+        </discriminator>
+        鉴别器：判断某列的值，然后根据某列的值改变封装行为
+        封装employee：
+            如果查出是女生，就把部门信息查询出来，否则不查询
+            如果是男生，把last_name这一列的值赋值给email
+        -->
+    <resultMap  id="MyEmpDis" type="employee">
+        <discriminator javaType="_int" column="gender">
+            <!--女生-->
+            <case value="0" resultType="employee">
+                <id column="id" property="id"></id>
+                <result column="lastName" property="lastName"></result>
+                <result column="email" property="email"></result>
+                <result column="gender" property="gender"></result>
+                <association property="department"
+                             select="com.xu.mybatis.mapper.DepartmentMapper.getDeptById"
+                             column="d_id"
+                ></association>
+            </case>
+            <case value="1" resultType="employee">
+                <id column="id" property="id"></id>
+                <result column="lastName" property="lastName"></result>
+                <result column="lastName" property="email"></result>
+                <result column="gender" property="gender"></result>
+            </case>
+        </discriminator>
+
+    </resultMap>
+
+</mapper>

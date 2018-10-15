@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xu.mybatis.mapper.EmployeeMapper">
+
+    <!--eviction:缓存的回收策略
+        flushInterval缓存刷新间隔多长清空一次，默认不清空
+        readOnly：
+            true:只读：mybatis认为所有从缓存中获取数据的操作都是只读操作，不会修改数据
+                        mybatis为了能加快获取速度，直接就会将数据在缓存中的引用交给用户，不安全，速度快
+            false：非只读，mybatis觉得获取的数据可能会被修改。
+                mybatis会利用序列化和反序列化的技术克隆一份新的数据给你。安全，速度慢。
+        size:缓存存放多少元素
+        type:使用默认的缓存的全类名
+
+    -->
+    <cache eviction="LRU" readOnly="false"  flushInterval="60000" size="1000"></cache>
+    <sql id="publicEmployee">(id,lastName,email,gender,d_id,empStatus)</sql>
+
+    <select id="getEmpBylastNameReturnMap" resultType="employee">
+        select * from employee where lastName LIKE #{lastName}
+    </select>
+
+    <select id="getEmpByIdReturnMap" resultType="map">
+        SELECT *  from employee where id = #{id}
+    </select>
+
+    <select id="selectEmployees" resultType="employee">
+        select * from employee where lastName LIKE #{lastName}
+    </select>
+    <!--databaseId引用数据库的厂商-->
+    <select id="selectEmployee" resultType="employee" databaseId="mysql">
+        select * from employee where id = #{id}
+    </select>
+    <!--useGeneratedKeys="true" keyProperty="id" 这样mybatis可以获得主键的值-->
+    <insert id="addEmployee" useGeneratedKeys="true" keyProperty="id">
+        insert into employee
+        <include refid="publicEmployee"></include>
+        VALUES (#{id},#{lastName},#{email},#{gender},#{dId},#{employeeStatus})
+    </insert>
+    <!--插入多条数据-->
+    <insert id="addEmployees" >
+        insert into employee(lastName,email,gender,d_id) VALUES
+        <foreach collection="list" separator="," item="item">
+            (#{item.id},#{item.lastName},#{item.email},#{item.gender},#{item.dId})
+        </foreach>
+    </insert>
+    <update id="updateEmployee">
+        update employee set lastName=#{lastName},email=#{email},gender=#{gender},d_id=#{dId} where id=#{id}
+    </update>
+    <delete id="deleteEmployee">
+        DELETE from employee WHERE id=#{id}
+    </delete>
+
+    <select id="getEmpByDeptId" resultType="employee">
+        select * from employee where d_id=#{did}
+    </select>
+
+    <select id="getEmps" resultType="com.xu.mybatis.bean.Employee">
+        select * from employee
+    </select>
+</mapper>

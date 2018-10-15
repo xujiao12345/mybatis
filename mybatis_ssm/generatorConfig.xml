@@ -1,0 +1,43 @@
+<!DOCTYPE generatorConfiguration
+        PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+
+<generatorConfiguration>
+    <context id="DB2Tables" targetRuntime="MyBatis3Simple">
+        <jdbcConnection driverClass="com.mysql.jdbc.Driver"
+                        connectionURL="jdbc:mysql://47.107.70.138:3307/mybatis"
+                        userId="root"
+                        password="123456">
+        </jdbcConnection>
+
+        <javaTypeResolver >
+            <property name="forceBigDecimals" value="false" />
+        </javaTypeResolver>
+
+        <!--定义Javabean的生成策略
+            targetPackage:目标包名
+            targetProject：目标工程
+        -->
+        <javaModelGenerator targetPackage="com.xu.mybatis_ssm.bean" targetProject=".\src">
+            <property name="enableSubPackages" value="true" />
+            <property name="trimStrings" value="true" />
+        </javaModelGenerator>
+
+        <!--sql映射生成策略-->
+        <sqlMapGenerator targetPackage="com.xu.mybatis_ssm.mapperDao"  targetProject=".\src">
+            <property name="enableSubPackages" value="true" />
+        </sqlMapGenerator>
+
+        <!--指定mapper接口所在的位置-->
+        <javaClientGenerator type="XMLMAPPER" targetPackage="com.xu.mybatis_ssm.mapperDao"  targetProject=".\src">
+            <property name="enableSubPackages" value="true" />
+        </javaClientGenerator>
+
+        <!--指定数据库中逆向生成哪些表-->
+        <table schema="DB2ADMIN" tableName="department" domainObjectName="Dept" >
+        </table>
+        <table schema="DB2ADMIN" tableName="employee" domainObjectName="Emp" >
+        </table>
+
+    </context>
+</generatorConfiguration>

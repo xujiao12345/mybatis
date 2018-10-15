@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xu.mybatis.mapper.EmployeeDynamicSqlMapper">
+    <!--1. 1=1可以解决where and问题
+        2.把条件放入到where标签中
+    -->
+    <select id="getEmpsByDyncSql" resultType="com.xu.mybatis.bean.Employee">
+--      select * from employee where 1=1
+        select * from employee
+        <where>
+            <if test="id!=null">
+               id=#{id}
+            </if>
+            <if test="lastName!=null and lastName!=&quot;&quot;">
+                and lastName like #{lastName}
+            </if>
+            <if test="gender!=0 and gender!=null">
+                and gender=#{gender}
+            </if>
+            <if test="email!=null and email!=&quot;&quot;">
+                and email=#{email}
+            </if>
+        </where>
+    </select>
+
+    <!--trim是标签体中整个字符串拼串后的结果
+        prefix给拼串后的整个字符串拼串后的结果
+        prefixOverrides前缀覆盖;去掉整个字符串多余的字符
+        suffix给整个字符串加一个后缀
+        suffixOverrides：去掉整个字符串多余的字符
+    -->
+    <select id="getEmpsByTrim" resultType="employee">
+        select * from employee
+        <trim prefix="where" suffixOverrides="and">
+            <if test="id!=null">
+                id=#{id} and
+            </if>
+            <if test="lastName!=null and lastName!=&quot;&quot;">
+                 lastName like #{lastName} and
+            </if>
+            <if test="gender!=0 and gender!=null">
+                 gender=#{gender} and
+            </if>
+            <if test="email!=null and email!=&quot;&quot;">
+                 email=#{email}
+            </if>
+        </trim>
+    </select>
+
+
+    <!---->
+    <select id="getEmpsByChoose" resultType="employee">
+        select * from employee
+        <where>
+            <choose>
+                <when test="id!=null">
+                    id=#{id}
+                </when>
+                <when test="lastName!=null">
+                    lastName like #{lastName}
+                </when>
+                <when test="email!=null">
+                    email=#{email}
+                </when>
+                <otherwise>
+                    gender=0
+                </otherwise>
+            </choose>
+        </where>
+
+    </select>
+
+    <update id="updateEmp">
+        update employee
+        <set>
+            <if test="lastName!=null">
+                lastName=#{lastName},
+            </if>
+            <if test="email!=null">
+                email=#{email},
+            </if>
+            <if test="gender!=null">
+                gender=#{gender}
+            </if>
+        </set>
+        <where>
+            id=#{id}
+        </where>
+    </update>
+
+    <!--collection 指定要遍历的集合，
+                    list类型的参数会特殊处理封装在map中，map的key就叫list
+         item：将当前遍历出的元素赋值给指定的变量
+         #{变量名}就能取出变量的值也就是当前遍历的元素
+         separator每个元素的分隔符
+         open遍历出的整个结果拼接一个开始字符
+         close遍历出的整个结果拼接一个结束字符
+         index:1.遍历list的时候index是索引，item是值。2 遍历map的时候index表示的是map的key，item就是map的值
+
+    -->
+    <select id="getEmpsByConditionForeach" resultType="employee">
+        select * from employee where id in
+        <foreach collection="list" item="item_id" separator="," open="(" close=")">
+            #{item_id}
+        </foreach>
+    </select>
+
+    <!--批量保存-->
+    <insert id="addEmps">
+        insert into employee(lastName,email,gender,d_id) VALUES
+        <foreach collection="emps" separator="," item="emp">
+            (#{emp.lastName},#{emp.email},#{emp.gender},#{emp.dId})
+        </foreach>
+
+    </insert>
+
+    <!--两个内置参数
+        _parameter:代表整个参数
+            单个参数：_parameter就是这个参数
+            多个参数：参数会被封装成一个map,_parameter就是这个参数
+        _databaseId：如果配置了databaseIdProvider标签，_databaseId就代表当前数据库的别名
+    -->
+
+    <!--bind可以将OGNL表达式的值绑定到一个变量中，方便来引用这个变量的值-->
+    <select id="getEmpsTestInnerParameter" resultType="employee">
+        <bind name="_lastName" value="'%'+lastName+'%'"></bind>
+        <if test="_databaseId='mysql'">
+            select * from employee
+            <if test="_parameter!=null">
+                <where>
+                    lastName like #{lastName}
+                </where>
+            </if>
+        </if>
+
+    </select>
+</mapper>
